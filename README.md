@@ -32,6 +32,10 @@ el `.ipynb`**: se compila sin necesidad de tener los CSV.
 pip install -r requirements.txt
 jupyter-book build .
 rm -rf docs && cp -r _build/html docs && touch docs/.nojekyll
+
+# Jupyter Book deja en index.html solo una redireccion por meta refresh, que algunos
+# navegadores bloquean y muestran en blanco. Se sustituye por la pagina real:
+cp docs/entrega2_modelo.html docs/index.html
 ```
 
 ## Datos
