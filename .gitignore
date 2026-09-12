@@ -1,0 +1,9 @@
+# Datos: el conjunto es publico y pesa 136 MB.
+# transactions_data.csv supera el limite de 100 MB por archivo de GitHub.
+datos/
+*.csv
+
+# Salidas y temporales
+.ipynb_checkpoints/
+__pycache__/
+_build/

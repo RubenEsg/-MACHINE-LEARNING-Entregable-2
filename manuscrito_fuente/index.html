@@ -1,0 +1,1348 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Entrega 2 — Auditoría de calidad de datos y modelo base</title>
+<style>
+  @page { size: letter; margin: 2.2cm 2.4cm; }
+
+  html { font-size: 10.5pt; }
+  body {
+    font-family: "Times New Roman", Times, Georgia, serif;
+    line-height: 1.42;
+    color: #000;
+    margin: 0;
+    text-align: justify;
+    hyphens: auto;
+  }
+
+  h1.titulo {
+    font-size: 15.5pt; line-height: 1.28; text-align: center;
+    margin: 0 0 1.1em; font-weight: bold;
+  }
+  .autores { text-align: center; font-size: 10.5pt; margin-bottom: .3em; }
+  .afiliacion { text-align: center; font-size: 9.5pt; font-style: italic; margin-bottom: .25em; }
+  .correos { text-align: center; font-size: 9.5pt; margin-bottom: .25em; }
+  .curso { text-align: center; font-size: 9.5pt; margin-bottom: 1.6em; }
+
+  .resumen { margin: 0 1.1cm 1.1em; font-size: 9.8pt; }
+  .resumen h2 { font-size: 10.5pt; text-align: center; margin: 0 0 .5em; }
+  .claves { margin: 0 1.1cm 1.8em; font-size: 9.8pt; }
+
+  h2 { font-size: 12pt; margin: 1.5em 0 .55em; page-break-after: avoid; }
+  h3 { font-size: 10.8pt; margin: 1.2em 0 .45em; page-break-after: avoid; }
+  h4 { font-size: 10.5pt; font-style: italic; font-weight: normal;
+       margin: 1em 0 .35em; page-break-after: avoid; }
+  p { margin: 0 0 .55em; }
+  p + p { text-indent: 1.2em; }
+
+  figure { margin: 1.1em 0; text-align: center; page-break-inside: avoid; }
+  figure img { max-width: 100%; height: auto; }
+  figcaption {
+    font-size: 9pt; text-align: justify; margin-top: .45em;
+    padding: 0 .4cm; line-height: 1.3;
+  }
+  figcaption .et, table caption .et { font-weight: bold; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 9.2pt; margin: .3em 0 1.1em; }
+  table caption {
+    caption-side: top; font-size: 9pt; text-align: justify;
+    margin-bottom: .45em; line-height: 1.3;
+  }
+  .tabla-envoltorio { page-break-inside: avoid; margin: 1.1em 0; }
+  th, td { padding: .22em .5em; }
+  thead th { border-top: 1.1pt solid #000; border-bottom: .6pt solid #000; text-align: left; }
+  tbody tr:last-child td { border-bottom: 1.1pt solid #000; }
+  td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+  tbody tr.sep td { border-top: .4pt solid #999; }
+  .destacado { font-weight: bold; }
+
+  .ec { margin: .8em 0; text-align: center; font-size: 10.5pt; page-break-inside: avoid; }
+  .ec .num { float: right; }
+  var { font-style: italic; }
+  .op { font-style: normal; }
+  code, .mono { font-family: "Consolas", "Courier New", monospace; font-size: .9em; }
+
+  ul.decl { padding-left: 1.2em; margin: .3em 0 1em; }
+  ul.decl li { margin-bottom: .35em; }
+  .refs { font-size: 9.3pt; }
+  .refs p { padding-left: 1.1em; text-indent: -1.1em; margin-bottom: .4em; }
+  .refs p + p { text-indent: -1.1em; }
+  .salto { page-break-before: always; }
+</style>
+</head>
+
+<h1 class="titulo">Auditoría de calidad de datos y modelos lineales de referencia para la
+predicción de fuga de clientes en una fintech colombiana: detección y cuantificación de fuga de
+información</h1>
+
+<p class="autores">Valerie Martínez Pulido · Abrahan Basto Martínez · Rubén Esguerra Fernández</p>
+<p class="afiliacion">Departamento de Matemáticas, Física y Ciencia de Datos,
+Universidad del Norte, Barranquilla, Colombia</p>
+<p class="correos">pmartinezv@uninorte.edu.co · abrahanb@uninorte.edu.co · esguerrar@uninorte.edu.co</p>
+<p class="curso">Curso de Machine Learning — Entrega 2: Preparación de datos y modelos base</p>
+
+<div class="resumen">
+<h2>Resumen</h2>
+<p>La predicción de la fuga de clientes es una tarea central en los servicios financieros
+minoristas, y su resolución mediante aprendizaje supervisado depende críticamente de la calidad de
+los datos de entrada. En este trabajo se presentan la auditoría de datos y los modelos base de un
+proyecto sobre un conjunto público de una empresa fintech colombiana correspondiente a 2023,
+compuesto por 48.723 clientes descritos con 54 variables y 3.159.157 transacciones individuales.
+El análisis exploratorio identificó tres problemas con impacto directo sobre el modelado: la
+variable objetivo resultó casi determinada por el número de productos activos, con una escalera de
+paso exactamente constante de 0,05 que explica el 76,7 % de su varianza; tres columnas
+transaccionales resultaron duplicados desalineados o exactos; y los valores faltantes de la
+utilización de crédito resultaron estrictamente estructurales. Como consecuencia se eliminaron
+diecisiete variables, cada una respaldada por evidencia cuantitativa. Dado que la variable objetivo
+es continua, se abordan las dos formulaciones: regresión sobre el puntaje y clasificación tras
+binarizarlo. Un experimento de ablación cuantifica la fuga de información en ambas, y es la
+formulación de regresión la que lo hace con más nitidez: incluir la variable sospechosa eleva el
+coeficiente de determinación de 0,151 a 0,921, y el área bajo la curva de 0,682 a 0,974. Sobre el
+conjunto depurado, una regresión logística con penalización <var>L</var><sub>1</sub> alcanza un
+área bajo la curva de 0,683 en prueba, con exhaustividad de 0,652, seleccionando cincuenta y siete
+de setenta y ocho variables; una regresión Lasso sobre el objetivo continuo alcanza
+<var>R</var><sup>2</sup> = 0,151 con cuarenta variables. Un clasificador de <var>k</var> vecinos
+más cercanos, que no impone forma funcional alguna, no supera al modelo lineal, lo que acota
+empíricamente el margen de mejora disponible. El desempeño se concentra en tres predictores,
+mientras que el comportamiento transaccional no aporta capacidad predictiva alguna.</p>
+</div>
+
+<p class="claves"><span class="destacado">Palabras clave:</span> Fuga de clientes, Regresión
+logística, Regresión Ridge y Lasso, Fuga de información, Calidad de datos, Fintech.</p>
+
+<h2>1 Introducción</h2>
+
+<p>La retención de clientes y la estimación de su valor son dos problemas centrales en la banca
+minorista y en el sector <i>fintech</i>. Adquirir un cliente nuevo resulta considerablemente más
+costoso que conservar uno existente, y el aporte económico de cada cliente a lo largo de su
+relación con la entidad es marcadamente heterogéneo, por lo que anticipar quién tiene mayor
+probabilidad de fuga (<i>churn</i>) y cuánto valor generará (<i>customer lifetime value</i>, CLV)
+permite focalizar las acciones comerciales donde tienen mayor impacto (Gupta et al., 2006; Verbeke
+et al., 2012). Ambas tareas se abordan habitualmente como problemas de aprendizaje supervisado:
+clasificación o regresión para la fuga, y regresión —o clasificación ordinal sobre segmentos de
+valor— para el CLV.</p>
+
+<p>Sobre datos tabulares como los de este dominio, los modelos de referencia van desde
+alternativas lineales interpretables, como la regresión logística y las regresiones regularizadas
+Ridge y Lasso, hasta métodos de ensamble que constituyen el estándar actual, como Random Forest
+(Breiman, 2001) y XGBoost (Chen y Guestrin, 2016). Estos algoritmos son robustos frente a
+variables heterogéneas y relaciones no lineales, y por ello son la elección natural para el
+modelado posterior de este proyecto. Sin embargo, su desempeño está condicionado por un factor
+previo a la elección del algoritmo: la calidad y la coherencia de los datos de entrada.
+Metodologías clásicas del área, como CRISP-DM (Wirth y Hipp, 2000), sitúan precisamente las fases
+de comprensión y preparación de los datos antes del modelado, y el análisis exploratorio de datos
+(EDA) en el sentido de Tukey (1977) es la herramienta para ejecutarlas.</p>
+
+<p>Una limitación frecuente y a menudo subestimada en esta fase es la fuga de información
+(<i>data leakage</i>): cuando una variable predictora codifica, de forma directa o indirecta, la
+información de la etiqueta, las métricas de validación se inflan artificialmente y el modelo no
+generaliza a datos nuevos (Kaufman et al., 2012). La fuga no se limita a las variables: también
+puede introducirse en el propio procedimiento experimental, cuando un estadístico estimado sobre
+la totalidad de los datos —un umbral, una media de escalado, los niveles de una codificación— se
+emplea antes de separar el conjunto de prueba. A ello se suman problemas de calidad más prosaicos
+pero igualmente dañinos: columnas duplicadas o desalineadas que introducen multicolinealidad y
+ruido, y un tratamiento inadecuado de los valores faltantes, cuyo mecanismo generador —aleatorio o
+estructural— determina si imputar es legítimo o si equivale a inventar información (Little y
+Rubin, 2019). Detectar estas condiciones antes de entrenar es, por tanto, tan determinante para el
+resultado final como la selección del modelo.</p>
+
+<p>En este trabajo se aborda la fase de comprensión y preparación de datos de un proyecto de
+modelado sobre un conjunto público de clientes de una empresa fintech colombiana correspondiente
+al año 2023 (Muñoz Guerrero et al., 2025), compuesto por 48.723 clientes descritos con 54
+variables y 3.159.157 transacciones individuales, cuyas variables objetivo candidatas son la
+probabilidad de fuga (<code>churn_probability</code>) y el valor del cliente
+(<code>customer_lifetime_value</code> y su versión categórica <code>clv_segment</code>). El
+objetivo es doble: caracterizar el conjunto mediante un análisis exploratorio exhaustivo y auditar
+su calidad para definir un preprocesamiento riguroso y reproducible.</p>
+
+<p>La contribución de esta entrega es la identificación cuantitativa de tres problemas con impacto
+directo sobre el modelado —una fuga de información en la etiqueta de <i>churn</i>, un grupo de
+columnas transaccionales duplicadas y desalineadas, y valores faltantes de naturaleza
+estructural— y la definición, como consecuencia directa de dichos hallazgos, de un conjunto de
+datos depurado y un plan de preprocesamiento. Sostenemos que, sin esta auditoría previa, un modelo
+entrenado sobre los datos crudos alcanzaría un desempeño engañosamente alto, por la relación casi
+determinista entre la fuga y el número de productos activos, y arrastraría redundancia evitable; y
+mostramos con evidencia empírica las correcciones necesarias antes de la fase de modelado.</p>
+
+<h2>2 Metodología</h2>
+
+<h3>2.1 Descripción del problema y del conjunto de datos</h3>
+
+<h4>(1) Descripción general</h4>
+
+<p>El conjunto de datos empleado es COFINFAD: <i>Colombian Fintech Financial Analytics
+Dataset</i>, publicado de forma abierta en el repositorio Mendeley Data bajo licencia Creative
+Commons Attribution 4.0 (Muñoz Guerrero et al., 2025). Corresponde a clientes de una empresa
+fintech colombiana durante los doce meses del año 2023 y se distribuye en dos archivos
+complementarios. La versión utilizada en este trabajo contiene 54 de las variables documentadas en
+el repositorio. El primero, <code>customer_data.csv</code>, contiene un registro por cliente:
+48.723 filas y 54 columnas que combinan perfil demográfico, tenencia de productos, uso de canales
+digitales, satisfacción y NPS, resúmenes de actividad transaccional y las variables objetivo. El
+segundo, <code>transactions_data.csv</code>, contiene el detalle individual de 3.159.157
+transacciones con cuatro campos: <code>customer_id</code>, <code>date</code>, <code>amount</code>
+y <code>type</code>. La Tabla 1 resume la composición de la tabla de clientes por tipo de
+variable.</p>
+
+<div class="tabla-envoltorio">
+<table>
+<caption><span class="et">Tabla 1:</span> Composición de la tabla de clientes por tipo de
+variable.</caption>
+<thead><tr><th>Tipo</th><th>Ejemplos</th><th class="n">Cantidad</th></tr></thead>
+<tbody>
+<tr><td>Numéricas</td><td><code>age</code>, <code>active_products</code>,
+<code>churn_probability</code></td><td class="n">28</td></tr>
+<tr><td>Categóricas</td><td><code>gender</code>, <code>location</code>,
+<code>income_bracket</code></td><td class="n">13</td></tr>
+<tr><td>Booleanas</td><td><code>savings_account</code>, <code>credit_card</code></td>
+<td class="n">7</td></tr>
+<tr><td>Fecha</td><td><code>first_transaction_date</code>, <code>last_survey_date</code></td>
+<td class="n">5</td></tr>
+<tr><td>Identificador</td><td><code>customer_id</code></td><td class="n">1</td></tr>
+<tr class="sep"><td><span class="destacado">Total</span></td><td></td>
+<td class="n"><span class="destacado">54</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<p>Se consideran dos variables objetivo. La primera, <code>churn_probability</code>, es una
+variable continua acotada al intervalo [0,11; 0,50] con media 0,343, susceptible de tratarse como
+regresión o, tras binarizarla por un umbral, como clasificación. En esta entrega se desarrollan
+<span class="destacado">ambas formulaciones</span>, por dos razones: porque la variable disponible
+es continua y binarizarla descarta información, y porque el contraste entre las dos permite
+diagnosticar la fuga de información con mucha mayor precisión, como se muestra en la Sección 3.1.
+La segunda, <code>customer_lifetime_value</code>, es continua, fuertemente asimétrica (mediana
+≈ 1,30 × 10<sup>8</sup> frente a media ≈ 3,28 × 10<sup>8</sup> COP) y cuenta con una versión
+categórica ordinal, <code>clv_segment</code>, con cuatro niveles (<i>Bronze</i>, <i>Silver</i>,
+<i>Gold</i>, <i>Platinum</i>); el nivel más frecuente es <i>Bronze</i>, con 12.181 clientes
+(25,0 %), por lo que el balance entre segmentos es aproximadamente uniforme. Todos los clientes de
+la tabla poseen actividad transaccional registrada.</p>
+
+<h4>(2) ETL (<i>Extract, Transform, Load</i>)</h4>
+
+<p><span class="destacado">Extract.</span> Los datos se obtuvieron en formato CSV desde el
+repositorio público. La tabla de clientes se carga directamente y la de transacciones se lee
+interpretando el campo <code>date</code> como tipo fecha, lo que habilita la agregación temporal
+posterior. Ambos archivos se leen con <span class="mono">pandas</span> en Python 3. La ruta se
+resuelve de forma relativa al cuaderno, de modo que la ejecución no depende de la máquina.</p>
+
+<p><span class="destacado">Transform.</span> Las decisiones de limpieza no son <i>a priori</i>: se
+derivan de los hallazgos del EDA descritos en la Sección 2.2. En síntesis: (i) no se eliminan
+filas por duplicación en la tabla de clientes, pues no existen registros ni identificadores
+repetidos, mientras que en la tabla de transacciones se detectaron 102 filas exactamente
+duplicadas (0,003 % del total), volumen despreciable que se elimina por consistencia; (ii) se
+descartan las columnas transaccionales identificadas como duplicados desalineados o redundantes,
+conservando sus equivalentes verificadas contra el detalle de transacciones; (iii) los valores
+faltantes no se imputan con medidas de tendencia central: en la utilización de crédito se imputa
+cero por tratarse de un faltante estructural, y las columnas cuya ausencia no muestra mecanismo ni
+señal se descartan; (iv) los valores atípicos de las variables monetarias no se eliminan, ya que
+corresponden a colas legítimas.</p>
+
+<p><span class="destacado">Load.</span> El resultado es un conjunto depurado de 48.723 filas y 49
+columnas que se serializa junto con la partición empleada, de modo que la siguiente entrega parta
+exactamente del mismo material.</p>
+
+<h4>(3) EDA exhaustivo</h4>
+
+<p>Por su extensión, el análisis exploratorio de datos —tercera componente de esta subsección— se
+desarrolla de forma independiente en la Sección 2.2.</p>
+
+<h3>2.2 Análisis exploratorio de datos</h3>
+
+<p>Esta sección desarrolla el análisis exploratorio exhaustivo correspondiente a la componente (3)
+de la Sección 2.1. Se organiza en estadística descriptiva, análisis univariado, análisis bivariado
+y de correlación, detección de atípicos, auditoría de calidad y comportamiento transaccional, y
+cierra con las decisiones de preprocesamiento que se derivan directamente de lo observado.</p>
+
+<h4>2.2.1 Estadística descriptiva</h4>
+
+<p>La Tabla 2 presenta los estadísticos de las variables numéricas más relevantes. Se observan
+tres comportamientos distintos: variables acotadas en rangos estrechos (edad, antigüedad),
+variables de escala monetaria con dispersión extrema (volumen y valor de transacción, CLV) y
+variables de satisfacción concentradas en pocos valores.</p>
+
+<div class="tabla-envoltorio">
+<table>
+<caption><span class="et">Tabla 2:</span> Estadísticos descriptivos de variables numéricas
+seleccionadas (<var>n</var> = 48.723).</caption>
+<thead><tr><th>Variable</th><th class="n">Media</th><th class="n">Desv. est.</th>
+<th class="n">Mín.</th><th class="n">Mediana</th><th class="n">Máx.</th></tr></thead>
+<tbody>
+<tr><td><code>age</code></td><td class="n">44,54</td><td class="n">12,28</td><td class="n">29,00</td><td class="n">45,00</td><td class="n">60,00</td></tr>
+<tr><td><code>household_size</code></td><td class="n">3,50</td><td class="n">1,58</td><td class="n">1,00</td><td class="n">3,00</td><td class="n">13,00</td></tr>
+<tr><td><code>active_products</code></td><td class="n">2,10</td><td class="n">1,18</td><td class="n">1,00</td><td class="n">2,00</td><td class="n">5,00</td></tr>
+<tr><td><code>app_logins_frequency</code></td><td class="n">22,38</td><td class="n">11,75</td><td class="n">4,00</td><td class="n">22,00</td><td class="n">100,00</td></tr>
+<tr><td><code>satisfaction_score</code></td><td class="n">4,16</td><td class="n">0,58</td><td class="n">2,00</td><td class="n">4,00</td><td class="n">6,00</td></tr>
+<tr><td><code>nps_score</code></td><td class="n">−26,76</td><td class="n">12,56</td><td class="n">−80,00</td><td class="n">−28,00</td><td class="n">23,00</td></tr>
+<tr><td><code>customer_tenure</code></td><td class="n">11,37</td><td class="n">0,72</td><td class="n">4,70</td><td class="n">11,63</td><td class="n">11,97</td></tr>
+<tr><td><code>tx_count</code></td><td class="n">64,84</td><td class="n">611,93</td><td class="n">10,00</td><td class="n">18,00</td><td class="n">77.465,00</td></tr>
+<tr><td><code>avg_tx_value</code></td><td class="n">3,56 × 10<sup>6</sup></td><td class="n">3,96 × 10<sup>6</sup></td><td class="n">3,18 × 10<sup>5</sup></td><td class="n">1,76 × 10<sup>6</sup></td><td class="n">5,17 × 10<sup>7</sup></td></tr>
+<tr><td><code>total_tx_volume</code></td><td class="n">2,57 × 10<sup>8</sup></td><td class="n">6,21 × 10<sup>9</sup></td><td class="n">3,18 × 10<sup>6</sup></td><td class="n">4,81 × 10<sup>7</sup></td><td class="n">1,07 × 10<sup>12</sup></td></tr>
+<tr><td><code>churn_probability</code></td><td class="n">0,343</td><td class="n">0,07</td><td class="n">0,11</td><td class="n">0,35</td><td class="n">0,50</td></tr>
+<tr><td><code>customer_lifetime_value</code></td><td class="n">3,28 × 10<sup>8</sup></td><td class="n">7,93 × 10<sup>8</sup></td><td class="n">0,00</td><td class="n">1,30 × 10<sup>8</sup></td><td class="n">1,78 × 10<sup>10</sup></td></tr>
+</tbody>
+</table>
+</div>
+
+<p>La distancia entre media y mediana en las variables monetarias —en
+<code>total_tx_volume</code> la media quintuplica a la mediana— anticipa la fuerte asimetría a la
+derecha que se confirma en el análisis univariado. En sentido contrario,
+<code>customer_tenure</code> presenta una desviación estándar de apenas 0,72 sobre un máximo de
+11,97, indicando una concentración casi total de los clientes en el mismo rango de antigüedad.</p>
+
+<h4>2.2.2 Análisis univariado</h4>
+
+<p>La Figura 1 presenta la distribución de las principales variables numéricas. Las variables
+monetarias exhiben colas largas hacia la derecha que comprimen la mayor parte de la masa de
+probabilidad contra el eje; por ello la Figura 2 las reexpresa en escala logarítmica mediante
+diagramas de caja, donde su estructura y su dispersión resultan legibles.</p>
+
+<figure><img src="figuras/fig01.png" alt="">
+<figcaption><span class="et">Fig. 1:</span> Distribución de las principales variables numéricas de
+la tabla de clientes.</figcaption></figure>
+
+<figure><img src="figuras/fig02.png" alt="">
+<figcaption><span class="et">Fig. 2:</span> Variables monetarias en escala logarítmica
+log(1 + <var>x</var>). La longitud de los bigotes evidencia la asimetría remanente incluso tras la
+transformación.</figcaption></figure>
+
+<p>La distribución de <code>churn_probability</code> (Figura 9, izquierda) es unimodal y
+aproximadamente simétrica en torno a 0,35, pero truncada en ambos extremos: no existen clientes
+con probabilidad inferior a 0,11 ni superior a 0,50. Esta ausencia de valores en las regiones
+extremas es la primera señal de que la variable no registra un evento de fuga observado, sino un
+puntaje previamente calculado. El CLV (Figura 12, izquierda), en escala logarítmica, se aproxima a
+una distribución normal, comportamiento característico de las variables log-normales propias de
+magnitudes monetarias.</p>
+
+<p>Respecto de las variables categóricas (Figura 3), el género se reparte de forma casi
+equilibrada (24.033 mujeres, 49,3 %) y el sentimiento del <i>feedback</i> es mayoritariamente
+positivo (38.897 clientes, 79,8 %). Entre las variables de alta cardinalidad (Figuras 4 y 5),
+Bogotá concentra 16.967 clientes (34,8 %), mientras que <code>occupation</code> distribuye 48.723
+clientes entre 35 niveles con una frecuencia máxima de apenas 1.456 casos (3,0 %), lo que la
+convierte en una variable de escaso poder discriminativo en su forma actual.</p>
+
+<figure><img src="figuras/fig03.png" alt="">
+<figcaption><span class="et">Fig. 3:</span> Frecuencias de las variables categóricas de baja
+cardinalidad.</figcaption></figure>
+
+<figure><img src="figuras/fig04.png" alt="">
+<figcaption><span class="et">Fig. 4:</span> Quince ocupaciones más frecuentes. La frecuencia
+máxima no alcanza el 3 % del total.</figcaption></figure>
+
+<figure><img src="figuras/fig05.png" alt="">
+<figcaption><span class="et">Fig. 5:</span> Quince ubicaciones más frecuentes, encabezadas por
+Bogotá con el 34,8 % de los clientes.</figcaption></figure>
+
+<p>La tenencia de productos (Figura 6) es marcadamente desigual: la cuenta de ahorros alcanza al
+78,9 % de los clientes y el pago de facturas al 70,1 %, mientras que el producto de seguros solo
+llega al 21,2 %. Esta variable resultará central en el análisis de la fuga.</p>
+
+<figure><img src="figuras/fig06.png" alt="">
+<figcaption><span class="et">Fig. 6:</span> Tasa de tenencia o adopción por producto
+financiero.</figcaption></figure>
+
+<h4>2.2.3 Valores faltantes y su mecanismo</h4>
+
+<p>Los valores ausentes se concentran en únicamente tres columnas (Figura 7 y Tabla 3); las 51
+restantes están completas.</p>
+
+<figure><img src="figuras/fig07.png" alt="">
+<figcaption><span class="et">Fig. 7:</span> Porcentaje de valores faltantes por columna. Solo tres
+variables presentan ausencias.</figcaption></figure>
+
+<div class="tabla-envoltorio">
+<table>
+<caption><span class="et">Tabla 3:</span> Columnas con valores faltantes y mecanismo
+identificado.</caption>
+<thead><tr><th>Columna</th><th class="n">Faltantes</th><th class="n">%</th>
+<th>Mecanismo</th></tr></thead>
+<tbody>
+<tr><td><code>complaint_topics</code></td><td class="n">24.346</td><td class="n">50,0</td>
+<td>No explicado por las variables examinadas</td></tr>
+<tr><td><code>credit_utilization_ratio</code></td><td class="n">18.263</td><td class="n">37,5</td>
+<td>Estructural: ausente si no posee tarjeta</td></tr>
+<tr><td><code>feature_requests</code></td><td class="n">16.115</td><td class="n">33,1</td>
+<td>No explicado por las variables examinadas</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>El contraste de cada columna contra una variable que pudiera explicar la ausencia arroja un
+resultado concluyente para <code>credit_utilization_ratio</code>: la tabla de contingencia frente
+a <code>credit_card</code> es perfecta, ya que el 100 % de los registros con valor ausente
+corresponde a clientes sin tarjeta de crédito y el 100 % de los registros informados corresponde a
+clientes con tarjeta. Se trata, por tanto, de un faltante estrictamente estructural, cuyo
+significado es <i>no aplica</i> y no <i>dato perdido</i>. En cambio,
+<code>complaint_topics</code> y <code>feature_requests</code> no muestran relación con las
+variables de referencia examinadas, por lo que su ausencia se comporta como aproximadamente
+aleatoria; su correlación con la variable objetivo es de −0,0007 y −0,0066 respectivamente. Esta
+distinción es relevante porque implica tratamientos diferentes: imputar cero en la utilización de
+crédito es correcto por definición del dominio, mientras que para las otras dos columnas la
+decisión defendible es descartarlas y evitar imputaciones sin respaldo en los datos.</p>
+
+<h4>2.2.4 Auditoría de columnas transaccionales redundantes</h4>
+
+<p>El conjunto incluye dos grupos de columnas que resumen la actividad transaccional de cada
+cliente. Una comparación directa muestra que ninguno de los tres pares principales coincide fila a
+fila, resultado que en principio sugeriría que miden magnitudes distintas. Sin embargo, al
+comparar además sus distribuciones como conjuntos de valores ordenados, el diagnóstico cambia por
+completo (Tabla 4).</p>
+
+<div class="tabla-envoltorio">
+<table>
+<caption><span class="et">Tabla 4:</span> Diagnóstico de los pares de columnas transaccionales. La
+columna <i>mismos valores</i> compara ambas series tras ordenarlas.</caption>
+<thead><tr><th>Par de columnas</th><th class="n">Coinciden por fila (%)</th>
+<th class="n">Mismos valores (%)</th><th>Diagnóstico</th></tr></thead>
+<tbody>
+<tr><td><code>avg_tx_value</code> / <code>average_transaction_value</code></td>
+<td class="n">0,0</td><td class="n">100,0</td><td>Duplicado desalineado</td></tr>
+<tr><td><code>total_tx_volume</code> / <code>total_transaction_volume</code></td>
+<td class="n">0,0</td><td class="n">100,0</td><td>Duplicado desalineado</td></tr>
+<tr><td><code>tx_count</code> / <code>monthly_transaction_count</code></td>
+<td class="n">0,0</td><td class="n">0,0</td><td>Distinta ventana temporal</td></tr>
+<tr><td><code>transaction_frequency</code> / <code>avg_daily_transactions</code></td>
+<td class="n">100,0</td><td class="n">100,0</td><td>Duplicado exacto</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>Los dos primeros pares contienen exactamente el mismo conjunto de valores —coincidencia del
+100 % al ordenarlos— pero ninguna correspondencia a nivel de fila. La única explicación
+consistente con ambos hechos es que se trata de la misma variable cuyo orden fue alterado respecto
+de los identificadores de cliente: un duplicado corrupto, no una medida alternativa. El cuarto par
+es un duplicado exacto y alineado, redundante por definición. El tercero, en cambio, corresponde a
+la misma magnitud expresada en una ventana temporal distinta. Este diagnóstico se verifica de
+forma independiente en la Sección 2.2.10 contra el detalle real de transacciones.</p>
+
+<p>Consistentemente, el análisis de multicolinealidad (Tabla 5) identifica un bloque de tres
+variables mutuamente idénticas y un par de variables de satisfacción fuertemente asociadas.</p>
+
+<div class="tabla-envoltorio">
+<table>
+<caption><span class="et">Tabla 5:</span> Pares de variables numéricas con correlación
+|<var>r</var>| &gt; 0,9.</caption>
+<thead><tr><th>Variable A</th><th>Variable B</th><th class="n"><var>r</var></th></tr></thead>
+<tbody>
+<tr><td><code>transaction_frequency</code></td><td><code>avg_daily_transactions</code></td><td class="n">1,000</td></tr>
+<tr><td><code>monthly_transaction_count</code></td><td><code>avg_daily_transactions</code></td><td class="n">1,000</td></tr>
+<tr><td><code>monthly_transaction_count</code></td><td><code>transaction_frequency</code></td><td class="n">1,000</td></tr>
+<tr><td><code>satisfaction_score</code></td><td><code>nps_score</code></td><td class="n">0,917</td></tr>
+</tbody>
+</table>
+</div>
+
+<h4>2.2.5 Rangos acotados</h4>
+
+<p>Varias variables presentan límites que resultan difíciles de atribuir a un proceso natural de
+registro (Tabla 6).</p>
+
+<div class="tabla-envoltorio">
+<table>
+<caption><span class="et">Tabla 6:</span> Rangos observados en variables con acotamiento
+sospechoso.</caption>
+<thead><tr><th>Variable</th><th class="n">Mín.</th><th class="n">P1</th><th class="n">P99</th>
+<th class="n">Máx.</th></tr></thead>
+<tbody>
+<tr><td><code>age</code></td><td class="n">29,00</td><td class="n">29,00</td><td class="n">60,00</td><td class="n">60,00</td></tr>
+<tr><td><code>churn_probability</code></td><td class="n">0,11</td><td class="n">0,17</td><td class="n">0,46</td><td class="n">0,50</td></tr>
+<tr><td><code>customer_tenure</code></td><td class="n">4,70</td><td class="n">8,63</td><td class="n">11,97</td><td class="n">11,97</td></tr>
+<tr><td><code>satisfaction_score</code></td><td class="n">2,00</td><td class="n">3,00</td><td class="n">5,00</td><td class="n">6,00</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>La edad se restringe exactamente al intervalo de 29 a 60 años, sin un solo cliente fuera de él,
+y la antigüedad se satura en 11,97 tanto en el percentil 99 como en el máximo. Que una
+probabilidad no alcance nunca los extremos 0 y 1 refuerza la interpretación de
+<code>churn_probability</code> como un puntaje derivado. En conjunto, estos patrones sugieren que
+el conjunto es al menos parcialmente sintético, lo que obliga a ser prudente al extrapolar
+conclusiones fuera de los rangos observados. Finalmente, se registra un único cliente con CLV
+exactamente igual a cero (0,002 % del total), volumen irrelevante que no compromete el
+análisis.</p>
+
+<h4>2.2.6 Valores atípicos</h4>
+
+<p>La cuantificación mediante la regla del rango intercuartílico con factor 1,5 (Tabla 7) confirma
+lo anticipado por los diagramas de caja.</p>
+
+<div class="tabla-envoltorio">
+<table>
+<caption><span class="et">Tabla 7:</span> Variables con mayor proporción de valores atípicos
+(regla IQR 1,5×).</caption>
+<thead><tr><th>Variable</th><th class="n">Atípicos</th><th class="n">%</th></tr></thead>
+<tbody>
+<tr><td><code>failed_transactions</code></td><td class="n">8.818</td><td class="n">18,1</td></tr>
+<tr><td><code>monthly_transaction_count</code></td><td class="n">6.394</td><td class="n">13,1</td></tr>
+<tr><td><code>transaction_frequency</code></td><td class="n">5.889</td><td class="n">12,1</td></tr>
+<tr><td><code>avg_daily_transactions</code></td><td class="n">5.889</td><td class="n">12,1</td></tr>
+<tr><td><code>tx_satisfaction</code></td><td class="n">5.783</td><td class="n">11,9</td></tr>
+<tr><td><code>tx_count</code></td><td class="n">5.783</td><td class="n">11,9</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>Estos valores no corresponden a errores de captura sino a colas legítimas de distribuciones
+asimétricas: en <code>failed_transactions</code>, por ejemplo, la mediana y ambos cuartiles valen
+cero, de modo que cualquier cliente con al menos una transacción fallida es marcado como atípico
+por construcción de la regla. Eliminar estas observaciones supondría descartar precisamente a los
+clientes más activos y a los que experimentan incidencias, que son informativos para ambos
+objetivos. La decisión adoptada es conservarlos.</p>
+
+<h4>2.2.7 Análisis bivariado y de correlación</h4>
+
+<p>La matriz de correlación de Pearson (Figura 8) resume las asociaciones lineales entre las 28
+variables numéricas. Destacan tanto los bloques de variables transaccionales mutuamente
+redundantes ya identificados como una asociación aislada y muy intensa con la variable objetivo de
+fuga.</p>
+
+<figure><img src="figuras/fig08.png" alt="">
+<figcaption><span class="et">Fig. 8:</span> Matriz de correlación de Pearson de las variables
+numéricas.</figcaption></figure>
+
+<p>Dado el fuerte sesgo de las variables monetarias, la Tabla 8 contrasta el coeficiente de
+Pearson con el de Spearman, que captura relaciones monótonas no necesariamente lineales.</p>
+
+<div class="tabla-envoltorio">
+<table>
+<caption><span class="et">Tabla 8:</span> Principales asociaciones con cada variable objetivo:
+Pearson frente a Spearman.</caption>
+<thead><tr><th>Variable</th><th class="n">Pearson</th><th class="n">Spearman</th></tr></thead>
+<tbody>
+<tr><td colspan="3"><i>Con <code>churn_probability</code></i></td></tr>
+<tr><td><code>active_products</code></td><td class="n">−0,88</td><td class="n">−0,84</td></tr>
+<tr><td><code>app_logins_frequency</code></td><td class="n">−0,26</td><td class="n">−0,28</td></tr>
+<tr><td><code>age</code></td><td class="n">0,21</td><td class="n">0,21</td></tr>
+<tr><td><code>satisfaction_score</code></td><td class="n">−0,18</td><td class="n">−0,19</td></tr>
+<tr><td><code>nps_score</code></td><td class="n">−0,17</td><td class="n">−0,16</td></tr>
+<tr class="sep"><td colspan="3"><i>Con <code>customer_lifetime_value</code></i></td></tr>
+<tr><td><code>total_tx_volume</code></td><td class="n">0,11</td><td class="n">0,98</td></tr>
+<tr><td><code>avg_tx_value</code></td><td class="n">0,34</td><td class="n">0,76</td></tr>
+<tr><td><code>tx_satisfaction</code></td><td class="n">0,61</td><td class="n">0,56</td></tr>
+<tr><td><code>tx_count</code></td><td class="n">0,16</td><td class="n">0,56</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>El contraste es revelador para el CLV. La correlación de Pearson con
+<code>total_tx_volume</code> es de apenas 0,11, lo que sugeriría una relación débil; sin embargo,
+el coeficiente de Spearman asciende a 0,98, es decir, una relación monótona prácticamente
+perfecta. La discrepancia se explica por la extrema asimetría de ambas variables: unos pocos
+valores muy grandes dominan el cálculo lineal y enmascaran una relación de rango casi
+determinista. Esta observación tiene una consecuencia metodológica directa: en escala logarítmica,
+el volumen transaccionado debería ser un predictor muy potente del CLV, y evaluar la asociación
+únicamente con Pearson habría llevado a descartarlo erróneamente.</p>
+
+<p>En cuanto a las variables categóricas, la asociación medida mediante la V de Cramér resulta
+baja en general, con dos excepciones moderadas: <code>income_bracket</code> con
+<code>education_level</code> (<var>V</var> = 0,38) y <code>customer_segment</code> con
+<code>clv_segment</code> (<var>V</var> = 0,38); esta última es esperable, pues ambas describen la
+intensidad de la relación comercial. El resto de los pares presenta valores iguales o cercanos a
+cero, lo que indica independencia y descarta redundancia entre las categóricas.</p>
+
+<h4>2.2.8 Variable objetivo I: probabilidad de fuga</h4>
+
+<p>La Figura 9 muestra la distribución de la fuga y su comportamiento por segmento de cliente, y
+la Figura 10 la fuga promedio según la tenencia de cada producto.</p>
+
+<figure><img src="figuras/fig09.png" alt="">
+<figcaption><span class="et">Fig. 9:</span> Distribución de <code>churn_probability</code>
+(izquierda) y su comportamiento por segmento de cliente (derecha).</figcaption></figure>
+
+<figure><img src="figuras/fig10.png" alt="">
+<figcaption><span class="et">Fig. 10:</span> Fuga promedio según la tenencia de cada producto. En
+todos los casos, poseer el producto se asocia con menor fuga.</figcaption></figure>
+
+<p>El hallazgo central del análisis surge al desagregar la fuga por el número de productos activos
+(Tabla 9). La relación no es simplemente fuerte: es una escalera de paso constante.</p>
+
+<div class="tabla-envoltorio">
+<table>
+<caption><span class="et">Tabla 9:</span> Fuga promedio según el número de productos
+activos.</caption>
+<thead><tr><th class="n">Productos activos</th><th class="n">Media</th>
+<th class="n">Desv. est.</th><th class="n">Clientes</th><th class="n">Δ media</th></tr></thead>
+<tbody>
+<tr><td class="n">1</td><td class="n">0,40</td><td class="n">0,03</td><td class="n">19.576</td><td class="n">—</td></tr>
+<tr><td class="n">2</td><td class="n">0,35</td><td class="n">0,03</td><td class="n">14.653</td><td class="n">−0,05</td></tr>
+<tr><td class="n">3</td><td class="n">0,30</td><td class="n">0,03</td><td class="n">7.197</td><td class="n">−0,05</td></tr>
+<tr><td class="n">4</td><td class="n">0,25</td><td class="n">0,03</td><td class="n">4.871</td><td class="n">−0,05</td></tr>
+<tr><td class="n">5</td><td class="n">0,20</td><td class="n">0,03</td><td class="n">2.426</td><td class="n">−0,05</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>Cada producto adicional reduce la fuga promedio exactamente en 0,0499 en promedio, con una
+desviación entre los cuatro saltos de apenas 0,00057 y una desviación estándar constante de 0,03
+en los cinco grupos. La correlación entre ambas variables es <var>r</var> = −0,876, de modo que un
+único predictor explica el <var>R</var><sup>2</sup> = 0,767 de la varianza de la etiqueta. Una
+regularidad de esta naturaleza —paso idéntico, dispersión idéntica— no es propia de un fenómeno de
+comportamiento observado, en el que cabría esperar efectos decrecientes y varianza heterogénea
+entre grupos. La interpretación más plausible es que <code>churn_probability</code> fue generada a
+partir de <code>active_products</code> mediante una regla determinista más un término de ruido de
+escala reducida. Combinado con el acotamiento del rango documentado antes, ello configura un caso
+de fuga de información: entrenar un modelo que incluya <code>active_products</code> produciría
+métricas excelentes que no reflejarían capacidad predictiva real sino la recuperación de la
+fórmula generadora (Kaufman et al., 2012).</p>
+
+<p>Las restantes variables presentan asociaciones débiles pero coherentes con la teoría
+(Figura 11): a mayor satisfacción y mayor NPS, menor fuga. Las variables categóricas, evaluadas
+mediante el tamaño de efecto <var>η</var><sup>2</sup> (Tabla 10), explican una fracción
+prácticamente nula de la varianza.</p>
+
+<figure><img src="figuras/fig11.png" alt="">
+<figcaption><span class="et">Fig. 11:</span> Fuga frente a la satisfacción declarada (izquierda) y
+al NPS (derecha).</figcaption></figure>
+
+<div class="tabla-envoltorio">
+<table>
+<caption><span class="et">Tabla 10:</span> Tamaño de efecto <var>η</var><sup>2</sup> de las
+variables categóricas sobre la fuga.</caption>
+<thead><tr><th>Variable categórica</th><th class="n"><var>η</var><sup>2</sup></th></tr></thead>
+<tbody>
+<tr><td><code>income_bracket</code></td><td class="n">0,0050</td></tr>
+<tr><td><code>location</code></td><td class="n">0,0004</td></tr>
+<tr><td><code>education_level</code></td><td class="n">0,0002</td></tr>
+<tr><td><code>preferred_transaction_type</code></td><td class="n">0,0001</td></tr>
+<tr><td><code>customer_segment</code></td><td class="n">0,0001</td></tr>
+<tr><td><code>acquisition_channel</code></td><td class="n">0,0000</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>Ninguna categórica supera el 0,5 % de varianza explicada, lo que confirma que el perfil
+demográfico y el canal de adquisición aportan una señal marginal frente al número de
+productos.</p>
+
+<h4>2.2.9 Variable objetivo II: valor del cliente</h4>
+
+<p>El CLV, representado en escala logarítmica (Figura 12), presenta una distribución
+aproximadamente log-normal y una progresión ordenada a lo largo de los segmentos de valor.</p>
+
+<figure><img src="figuras/fig12.png" alt="">
+<figcaption><span class="et">Fig. 12:</span> Distribución de log(1 + CLV) (izquierda) y CLV por
+segmento de valor en escala logarítmica (derecha).</figcaption></figure>
+
+<div class="tabla-envoltorio">
+<table>
+<caption><span class="et">Tabla 11:</span> CLV mediano por segmento de valor y por segmento de
+cliente (COP).</caption>
+<thead><tr><th><code>clv_segment</code></th><th class="n">CLV mediano</th>
+<th><code>customer_segment</code></th><th class="n">CLV mediano</th></tr></thead>
+<tbody>
+<tr><td><i>Bronze</i></td><td class="n">4,11 × 10<sup>7</sup></td><td><i>inactive</i></td><td class="n">3,15 × 10<sup>7</sup></td></tr>
+<tr><td><i>Silver</i></td><td class="n">9,58 × 10<sup>7</sup></td><td><i>occasional</i></td><td class="n">8,80 × 10<sup>7</sup></td></tr>
+<tr><td><i>Gold</i></td><td class="n">1,91 × 10<sup>8</sup></td><td><i>regular</i></td><td class="n">2,36 × 10<sup>8</sup></td></tr>
+<tr><td><i>Platinum</i></td><td class="n">4,93 × 10<sup>8</sup></td><td><i>power</i></td><td class="n">5,34 × 10<sup>8</sup></td></tr>
+</tbody>
+</table>
+</div>
+
+<p>La progresión es monótona y de gran amplitud en ambas particiones: el CLV mediano se multiplica
+por doce entre <i>Bronze</i> y <i>Platinum</i>, y por diecisiete entre los clientes inactivos y los
+de mayor actividad (Tabla 11). El tamaño de efecto de <code>clv_segment</code> sobre el CLV es
+<var>η</var><sup>2</sup> = 0,194, muy superior al de cualquier categórica sobre la fuga.</p>
+
+<p>Resulta notable, en contraste, que el CLV mediano no varíe con el número de productos activos
+(Figura 13, izquierda): permanece en torno a 1,29 × 10<sup>8</sup> para clientes con uno a cuatro
+productos y solo asciende levemente a 1,38 × 10<sup>8</sup> con cinco. Es decir, la variable que
+casi determina la fuga carece de relación con el valor del cliente. El CLV se explica por la
+intensidad transaccional —como muestra el panel derecho de la Figura 13 y confirma el coeficiente
+de Spearman de 0,98 con el volumen— y no por la amplitud de la relación comercial. Ambos objetivos
+responden, por tanto, a mecanismos distintos, y la Figura 14 lo corrobora: la correlación entre
+fuga y CLV es prácticamente nula (<var>r</var> = −0,02).</p>
+
+<figure><img src="figuras/fig13.png" alt="">
+<figcaption><span class="et">Fig. 13:</span> CLV por número de productos activos (izquierda) y
+frente al volumen total transaccionado (derecha), ambos en escala
+logarítmica.</figcaption></figure>
+
+<figure><img src="figuras/fig14.png" alt="">
+<figcaption><span class="et">Fig. 14:</span> Relación entre las dos variables objetivo. La
+ausencia de estructura confirma su independencia.</figcaption></figure>
+
+<h4>2.2.10 Comportamiento transaccional</h4>
+
+<p>La tabla de transacciones cubre del 4 de enero al 29 de diciembre de 2023 y registra actividad
+para la totalidad de los 48.723 clientes. Su composición por tipo de operación aparece en la
+Tabla 12.</p>
+
+<div class="tabla-envoltorio">
+<table>
+<caption><span class="et">Tabla 12:</span> Composición de las transacciones por tipo de
+operación.</caption>
+<thead><tr><th>Tipo</th><th class="n">Cantidad</th><th class="n">Participación (%)</th></tr></thead>
+<tbody>
+<tr><td><i>Transfer</i></td><td class="n">1.433.963</td><td class="n">45,4</td></tr>
+<tr><td><i>Payment</i></td><td class="n">970.548</td><td class="n">30,7</td></tr>
+<tr><td><i>Withdrawal</i></td><td class="n">456.577</td><td class="n">14,5</td></tr>
+<tr><td><i>Deposit</i></td><td class="n">298.069</td><td class="n">9,4</td></tr>
+<tr class="sep"><td><span class="destacado">Total</span></td>
+<td class="n"><span class="destacado">3.159.157</span></td>
+<td class="n"><span class="destacado">100,0</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<p>La auditoría de calidad de esta tabla arroja 102 filas exactamente duplicadas (0,003 %), ningún
+monto menor o igual a cero, ninguna fecha nula, ningún cliente huérfano sin perfil asociado y
+ningún cliente sin transacciones; las cinco comprobaciones se ejecutan explícitamente en el
+cuaderno. Cabe señalar que el signo de la operación reside
+exclusivamente en el campo <code>type</code>, dado que todos los montos son positivos; calcular
+flujos netos exigirá aplicar el signo correspondiente según el tipo.</p>
+
+<p>Los montos por tipo de operación (Figura 15) presentan distribuciones similares entre sí en
+escala logarítmica. La evolución mensual (Figura 16) es estable, sin tendencia ni estacionalidad
+marcada, y la distribución por día de la semana (Figura 17) es homogénea, sin la caída de fin de
+semana que cabría esperar en datos financieros reales —observación coherente con la naturaleza
+parcialmente sintética del conjunto.</p>
+
+<figure><img src="figuras/fig15.png" alt="">
+<figcaption><span class="et">Fig. 15:</span> Distribución del monto por tipo de transacción en
+escala logarítmica.</figcaption></figure>
+
+<figure><img src="figuras/fig16.png" alt="">
+<figcaption><span class="et">Fig. 16:</span> Evolución mensual del número de transacciones y del
+volumen monetario.</figcaption></figure>
+
+<figure><img src="figuras/fig17.png" alt="">
+<figcaption><span class="et">Fig. 17:</span> Transacciones por día de la semana y composición
+mensual por tipo de operación.</figcaption></figure>
+
+<p>El aporte decisivo de esta tabla es que permite verificar de forma independiente los resúmenes
+por cliente. Agregando el detalle real por <code>customer_id</code> y comparándolo con cada
+columna reportada se obtiene la Tabla 13.</p>
+
+<div class="tabla-envoltorio">
+<table>
+<caption><span class="et">Tabla 13:</span> Reconciliación de las columnas reportadas contra el
+detalle real de transacciones.</caption>
+<thead><tr><th>Columna reportada</th><th>Magnitud real</th><th class="n">Coincidencia (%)</th>
+<th>Veredicto</th></tr></thead>
+<tbody>
+<tr><td><code>tx_count</code></td><td>Número de transacciones</td><td class="n">100,0</td><td>Confiable</td></tr>
+<tr><td><code>total_tx_volume</code></td><td>Suma de montos</td><td class="n">100,0</td><td>Confiable</td></tr>
+<tr><td><code>avg_tx_value</code></td><td>Monto promedio</td><td class="n">100,0</td><td>Confiable</td></tr>
+<tr><td><code>monthly_transaction_count</code></td><td>Número de transacciones</td><td class="n">0,1</td><td>Descartar</td></tr>
+<tr><td><code>total_transaction_volume</code></td><td>Suma de montos</td><td class="n">0,4</td><td>Descartar</td></tr>
+<tr><td><code>average_transaction_value</code></td><td>Monto promedio</td><td class="n">1,1</td><td>Descartar</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>El resultado es inequívoco y confirma el diagnóstico de la Tabla 4: las tres columnas del
+primer grupo reproducen exactamente la agregación del detalle transaccional, mientras que sus
+homólogas del segundo grupo apenas coinciden en un 0,1 a 1,1 % de los casos, porcentaje atribuible
+a coincidencias fortuitas. La Figura 18 ilustra gráficamente esta correspondencia perfecta para el
+volumen, junto con la fuga promedio por quintil de actividad transaccional.</p>
+
+<figure><img src="figuras/fig18.png" alt="">
+<figcaption><span class="et">Fig. 18:</span> Volumen reportado frente al calculado desde el
+detalle (izquierda) y fuga promedio por quintil de número de transacciones
+(derecha).</figcaption></figure>
+
+<h4>2.2.11 Decisiones de preprocesamiento derivadas del EDA</h4>
+
+<p>Los hallazgos anteriores determinan directamente el tratamiento de los datos previo al
+modelado, según se resume en la Tabla 14.</p>
+
+<div class="tabla-envoltorio">
+<table>
+<caption><span class="et">Tabla 14:</span> Decisiones de preprocesamiento y hallazgo del EDA que
+las justifica.</caption>
+<thead><tr><th>Hallazgo del EDA</th><th>Decisión adoptada</th></tr></thead>
+<tbody>
+<tr><td>Fuga casi determinada por <code>active_products</code>
+(<var>R</var><sup>2</sup> = 0,767, escalera de paso constante)</td>
+<td>Auditar la construcción de la etiqueta; excluir <code>active_products</code> del conjunto de
+predictores y reportar por separado el desempeño con y sin ella</td></tr>
+<tr><td>Columnas transaccionales duplicadas o desalineadas (Tablas 4 y 13)</td>
+<td>Eliminar <code>average_transaction_value</code>, <code>total_transaction_volume</code>,
+<code>avg_daily_transactions</code> y <code>monthly_transaction_count</code>; conservar las
+verificadas contra el detalle</td></tr>
+<tr><td><code>credit_utilization_ratio</code> ausente exactamente cuando no hay tarjeta</td>
+<td>Imputar cero por tratarse de un <i>no aplica</i>; la imputación no usa ningún estadístico del
+conjunto y por tanto no introduce fuga</td></tr>
+<tr><td>Faltantes sin mecanismo ni señal en <code>complaint_topics</code> y
+<code>feature_requests</code></td>
+<td>Descartar ambas columnas; no imputar contenido sin respaldo</td></tr>
+<tr><td>Asimetría extrema en variables monetarias;
+<var>ρ</var><sub>Spearman</sub> = 0,98 entre CLV y volumen</td>
+<td>No eliminar atípicos; estandarizar dentro del <i>pipeline</i></td></tr>
+<tr><td><code>satisfaction_score</code> y <code>nps_score</code> con
+<var>r</var> = 0,917</td><td>Conservar una sola de las dos en modelos lineales</td></tr>
+<tr><td><code>occupation</code> de alta cardinalidad y
+<var>η</var><sup>2</sup> = 0,0008</td><td>Eliminar por cardinalidad sin señal</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>2.3 Modelos de referencia</h3>
+
+<p>Se emplean como referencia los modelos lineales vistos en el curso, que constituyen el punto de
+partida natural para datos tabulares y ofrecen coeficientes interpretables, condición útil cuando
+el objetivo incluye entender qué variables explican la fuga. Puesto que la variable objetivo es
+continua, se desarrollan las dos formulaciones.</p>
+
+<h4>2.3.1 Clasificación: regresión logística regularizada</h4>
+
+<p>La regresión logística modela la probabilidad de pertenecer a la clase positiva mediante la
+función logística aplicada a una combinación lineal de las variables:</p>
+
+<div class="ec"><span class="num">(1)</span>
+<var>P</var>(<var>y</var> = 1 | <b>x</b>) = <var>σ</var>(<b>w</b><sup>⊤</sup><b>x</b> +
+<var>b</var>), &nbsp;&nbsp; <var>σ</var>(<var>z</var>) = 1 / (1 +
+<var>e</var><sup>−<var>z</var></sup>).
+</div>
+
+<p>Los parámetros se estiman minimizando la entropía cruzada sobre las <var>n</var>
+observaciones. Sobre esa función objetivo se añaden los dos esquemas de regularización
+estudiados. La penalización Ridge (<var>L</var><sub>2</sub>) (Hoerl y Kennard, 1970) reduce la
+magnitud de los coeficientes de forma continua y reparte el peso entre variables correlacionadas;
+la penalización Lasso (<var>L</var><sub>1</sub>) (Tibshirani, 1996) sustituye la norma euclídea
+por la norma <var>L</var><sub>1</sub>, cuya geometría lleva coeficientes exactamente a cero y
+produce, por tanto, selección automática de variables:</p>
+
+<div class="ec"><span class="num">(2)</span>
+min<sub><b>w</b>,<var>b</var></sub> &nbsp; −∑<sub><var>i</var></sub> [ <var>y<sub>i</sub></var>
+log <var>p̂<sub>i</sub></var> + (1 − <var>y<sub>i</sub></var>) log(1 − <var>p̂<sub>i</sub></var>) ]
++ (1 / 2<var>C</var>) ‖<b>w</b>‖<sub>2</sub><sup>2</sup>,
+</div>
+
+<div class="ec"><span class="num">(3)</span>
+min<sub><b>w</b>,<var>b</var></sub> &nbsp; −∑<sub><var>i</var></sub> [ <var>y<sub>i</sub></var>
+log <var>p̂<sub>i</sub></var> + (1 − <var>y<sub>i</sub></var>) log(1 − <var>p̂<sub>i</sub></var>) ]
++ (1 / <var>C</var>) ‖<b>w</b>‖<sub>1</sub>.
+</div>
+
+<p>En ambas formulaciones <var>C</var> es el inverso de la intensidad de regularización: valores
+pequeños penalizan con más fuerza. Se exploraron los valores <var>C</var> ∈ {10<sup>−3</sup>,
+10<sup>−2</sup>, 10<sup>−1</sup>, 1, 10, 10<sup>2</sup>} combinados con las dos penalizaciones
+mediante búsqueda en rejilla.</p>
+
+<h4>2.3.2 Regresión: Ridge y Lasso sobre el objetivo continuo</h4>
+
+<p>Puesto que <code>churn_probability</code> es continua, la tarea admite tratarse directamente
+como regresión, sin binarizar. Se emplean los estimadores <span class="mono">Ridge</span> y
+<span class="mono">Lasso</span> de <span class="mono">scikit-learn</span>, que aplican las mismas
+dos penalizaciones sobre el error cuadrático:</p>
+
+<div class="ec"><span class="num">(4)</span>
+Ridge: &nbsp; min<sub><b>w</b>,<var>b</var></sub> &nbsp; ‖<b>y</b> − <b>Xw</b> −
+<var>b</var>‖<sub>2</sub><sup>2</sup> + <var>α</var> ‖<b>w</b>‖<sub>2</sub><sup>2</sup>,
+</div>
+
+<div class="ec"><span class="num">(5)</span>
+Lasso: &nbsp; min<sub><b>w</b>,<var>b</var></sub> &nbsp; (1 / 2<var>n</var>) ‖<b>y</b> −
+<b>Xw</b> − <var>b</var>‖<sub>2</sub><sup>2</sup> + <var>α</var> ‖<b>w</b>‖<sub>1</sub>.
+</div>
+
+<p>Aquí el hiperparámetro es <var>α</var>, la intensidad de la penalización, con una convención
+inversa a la de <var>C</var>: valores <span class="destacado">grandes</span> penalizan más. Se
+exploraron <var>α</var> ∈ {0,01; 0,1; 1; 10; 10<sup>2</sup>; 10<sup>3</sup>; 10<sup>4</sup>;
+10<sup>5</sup>} para Ridge y <var>α</var> ∈ {10<sup>−5</sup>, 10<sup>−4</sup>, 10<sup>−3</sup>,
+10<sup>−2</sup>, 10<sup>−1</sup>} para Lasso, y se compararon contra mínimos cuadrados ordinarios
+sin penalización. Las métricas reportadas son el coeficiente de determinación
+<var>R</var><sup>2</sup>, la raíz del error cuadrático medio (RMSE) y el error absoluto medio
+(MAE).</p>
+
+<p>Esta formulación cumple además una función diagnóstica. Como se muestra en la Sección 3.1, el
+<var>R</var><sup>2</sup> mide directamente qué fracción de la varianza de la etiqueta reproduce
+cada conjunto de variables, y por ello detecta la fuga de información con mucha mayor nitidez que
+el área bajo la curva, que comprime la diferencia al operar sobre la etiqueta ya binarizada.</p>
+
+<h4>2.3.3 Referencia no paramétrica: <var>k</var> vecinos más cercanos</h4>
+
+<p>Para acotar empíricamente el margen de mejora disponible se incorpora un clasificador de
+<var>k</var> vecinos más cercanos, que asigna a cada observación la clase mayoritaria entre sus
+<var>k</var> vecinos en el espacio estandarizado y no impone forma funcional alguna. Si existieran
+relaciones no lineales o interacciones relevantes entre los predictores, este método debería
+superar al modelo lineal. Se exploraron <var>k</var> ∈ {10, 25, 50, 100, 200}.</p>
+
+<h3>2.4 Preparación del conjunto de modelado</h3>
+
+<p>Las decisiones de la Sección 2.2 se aplicaron sobre la unión de las dos tablas. Del detalle
+transaccional se eliminaron 102 filas exactamente duplicadas y se derivaron doce variables de
+comportamiento —número de operaciones, montos agregados, recencia, días activo, volatilidad del
+monto, meses con actividad y composición por tipo de operación—, obteniendo una tabla unida de
+48.723 filas y 66 columnas.</p>
+
+<p>De ellas se descartaron 17, cada una con evidencia cuantitativa (Tabla 15), resultando un
+conjunto de 49 columnas. Los 18.263 valores ausentes de <code>credit_utilization_ratio</code> se
+imputaron con cero, decisión respaldada por la correspondencia perfecta con la tenencia de
+tarjeta. Toda la evidencia de la Tabla 15 se recalcula dentro del cuaderno, de modo que cada
+criterio de eliminación queda respaldado por una salida de la misma ejecución.</p>
+
+<div class="tabla-envoltorio">
+<table>
+<caption><span class="et">Tabla 15:</span> Variables eliminadas del conjunto de modelado y
+evidencia que respalda cada decisión.</caption>
+<thead><tr><th>Columna</th><th>Evidencia</th><th>Criterio</th></tr></thead>
+<tbody>
+<tr><td><code>active_products</code></td>
+<td><var>r</var> = −0,8760; <var>R</var><sup>2</sup> = 0,767 con una sola variable; saltos medios
+de −0,0499 con desviación de 0,00057</td><td><span class="destacado">Fuga de información</span></td></tr>
+<tr><td><code>customer_lifetime_value</code>, <code>clv_segment</code></td>
+<td><var>ρ</var><sub>Spearman</sub> = 0,984 con <code>total_tx_volume</code></td>
+<td>Segunda variable objetivo</td></tr>
+<tr><td><code>average_transaction_value</code>, <code>total_transaction_volume</code></td>
+<td>100 % de los mismos valores con 0 % de coincidencia por fila</td>
+<td>Duplicado desalineado</td></tr>
+<tr><td><code>avg_daily_transactions</code>, <code>monthly_transaction_count</code></td>
+<td><var>r</var> = 1,000 con <code>transaction_frequency</code></td><td>Duplicado exacto</td></tr>
+<tr><td><code>first_transaction_date</code>, <code>last_transaction_date</code></td>
+<td>Idéntico número de valores distintos y rango que <code>first_tx</code> y
+<code>last_tx</code></td><td>Duplicado</td></tr>
+<tr><td><code>nps_score</code></td><td><var>r</var> = 0,917 con
+<code>satisfaction_score</code></td><td>Colinealidad</td></tr>
+<tr><td><code>occupation</code></td><td>35 niveles, ninguno supera el 3 %;
+<var>η</var><sup>2</sup> = 0,0008</td><td>Cardinalidad sin señal</td></tr>
+<tr><td><code>complaint_topics</code>, <code>feature_requests</code></td>
+<td>50,0 % y 33,1 % ausentes, con ausencia aleatoria y correlación de −0,0007 y −0,0066 con el
+objetivo</td><td>Faltantes sin mecanismo</td></tr>
+<tr><td><code>last_survey_date</code>, <code>first_tx</code>, <code>last_tx</code></td>
+<td><var>η</var><sup>2</sup> entre 0,0035 y 0,0070</td><td>Fechas sin señal</td></tr>
+<tr><td><code>customer_id</code></td><td>Llave única</td><td>Identificador</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>Merece mención una hipótesis que la verificación descartó. Cabía sospechar que
+<code>active_products</code> fuese la suma de las columnas booleanas de tenencia, en cuyo caso
+conservarlas habría reintroducido la fuga; la comprobación arrojó una coincidencia de apenas
+22,5 % y una correlación de 0,006, por lo que esas columnas son independientes y se conservaron.
+El experimento de ablación de la Sección 3.1 lo confirma de forma independiente.</p>
+
+<h3>2.5 Configuración experimental</h3>
+
+<p>La construcción de la etiqueta binaria exige una precaución que conviene explicitar. Binarizar
+<code>churn_probability</code> por su mediana requiere estimar esa mediana, y una mediana
+calculada sobre las 48.723 filas haría que la definición de la etiqueta de prueba dependiera de
+las propias observaciones de prueba. Sería una fuga de información en el diseño experimental,
+distinta de la fuga por variable diagnosticada en la Sección 2.2.8 pero igualmente invalidante, y
+tanto más fácil de pasar por alto cuanto que el estadístico en cuestión parece inocuo.</p>
+
+<p>El orden que evita ese problema es el siguiente. Primero se realiza la partición en
+entrenamiento y prueba, en proporción 80/20 (38.978 y 9.745 clientes) con semilla fija
+(<code>random_state = 42</code>), <span class="destacado">sobre la variable objetivo
+continua</span>. Después se estima el umbral de binarización como la mediana de
+<code>churn_probability</code> <span class="destacado">en el conjunto de entrenamiento</span>
+(0,353972). Finalmente ese umbral, ya fijo, se aplica a ambos conjuntos. Como la etiqueta no
+existe en el momento de partir, la partición no puede estratificarse por ella; el balance
+resultante es de todos modos de 49,99 % y 49,91 % de clase positiva en entrenamiento y prueba,
+porque el corte es la mediana.</p>
+
+<p>La magnitud de esa fuga potencial se midió explícitamente, en lugar de darse por supuesta. Con
+la semilla 42, el umbral estimado solo con entrenamiento coincide con el que se habría obtenido
+sobre el conjunto completo, y ninguna etiqueta de prueba difiere. La razón es que
+<code>churn_probability</code> toma únicamente 1.977 valores distintos entre 48.723 clientes
+—unos 25 clientes por valor—, de modo que la mediana cae sobre un valor repetido y la coincidencia
+depende del reparto concreto. Repitiendo el procedimiento con otras semillas (Tabla 16) se
+comprueba que el umbral sí se desplaza y que llegan a cambiar hasta 18 etiquetas de prueba. La
+coincidencia es, por tanto, un accidente de la partición y no una propiedad del procedimiento, lo
+que ilustra por qué el orden correcto debe respetarse con independencia de que una semilla
+particular lo haga indiferente.</p>
+
+<div class="tabla-envoltorio">
+<table>
+<caption><span class="et">Tabla 16:</span> Sensibilidad del umbral de binarización a la semilla de
+partición. La diferencia se mide contra el umbral estimado sobre el conjunto completo,
+0,353972.</caption>
+<thead><tr><th class="n">Semilla</th><th class="n">Umbral en entrenamiento</th>
+<th class="n">Diferencia</th><th class="n">Etiquetas de prueba que cambian</th></tr></thead>
+<tbody>
+<tr><td class="n">0</td><td class="n">0,354240</td><td class="n">+2,69 × 10<sup>−4</sup></td><td class="n">18</td></tr>
+<tr><td class="n">1</td><td class="n">0,353858</td><td class="n">−1,14 × 10<sup>−4</sup></td><td class="n">6</td></tr>
+<tr><td class="n">7</td><td class="n">0,353972</td><td class="n">0</td><td class="n">0</td></tr>
+<tr><td class="n">42</td><td class="n">0,353972</td><td class="n">0</td><td class="n">0</td></tr>
+<tr><td class="n">123</td><td class="n">0,353858</td><td class="n">−1,14 × 10<sup>−4</sup></td><td class="n">5</td></tr>
+<tr><td class="n">2024</td><td class="n">0,353843</td><td class="n">−1,29 × 10<sup>−4</sup></td><td class="n">16</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>El preprocesamiento sigue el mismo criterio. Generar las indicadoras de las variables
+categóricas sobre la tabla completa —aunque no emplea la etiqueta— haría que las columnas
+resultantes dependieran de los datos de prueba. Para evitarlo, la codificación <i>one-hot</i>
+(descartando el primer nivel para evitar colinealidad perfecta, e ignorando niveles no vistos) y
+el escalado estandarizado se encapsulan en un <span class="mono">ColumnTransformer</span>
+que vive <span class="destacado">dentro</span> del <i>pipeline</i>, de modo que se ajustan
+únicamente con los datos de entrenamiento de cada partición de la validación cruzada. La
+codificación eleva el conjunto a 78 variables.</p>
+
+<p>La selección de hiperparámetros se realizó por búsqueda en rejilla con validación cruzada de
+cinco particiones, estratificada en clasificación y ordinaria en regresión, optimizando el área
+bajo la curva ROC y el <var>R</var><sup>2</sup> respectivamente. Como métricas de evaluación se
+reportan, en clasificación, el AUC, la exactitud, la precisión, la exhaustividad (<i>recall</i>) y
+el F1, complementadas con la matriz de confusión y las curvas ROC y precisión–exhaustividad; y en
+regresión, el <var>R</var><sup>2</sup>, el RMSE y el MAE. Los experimentos se ejecutaron en
+Python 3.13.3 con <span class="mono">scikit-learn</span> 1.7.2,
+<span class="mono">numpy</span> 2.2.6 y <span class="mono">pandas</span> 2.3.3, con un tiempo total
+de cómputo de aproximadamente 150 segundos.</p>
+
+<h2>3 Resultados</h2>
+
+<h3>3.1 Cuantificación de la fuga de información</h3>
+
+<p>Antes de entrenar el modelo definitivo se midió el efecto de la variable identificada como fuga
+mediante un experimento de ablación: se entrenaron la misma regresión logística y la misma
+regresión Ridge sobre distintos subconjuntos de variables (Tabla 17).</p>
+
+<div class="tabla-envoltorio">
+<table>
+<caption><span class="et">Tabla 17:</span> Ablación: desempeño en validación cruzada de cinco
+particiones según el subconjunto de variables, en las dos formulaciones.</caption>
+<thead><tr><th>Subconjunto de variables</th><th class="n">Número</th>
+<th class="n">AUC (clasificación)</th>
+<th class="n"><var>R</var><sup>2</sup> (regresión Ridge)</th></tr></thead>
+<tbody>
+<tr><td>Todas las variables (incluye <code>active_products</code>)</td><td class="n">79</td>
+<td class="n">0,9736</td><td class="n">0,9211</td></tr>
+<tr><td>Sin <code>active_products</code></td><td class="n">78</td><td class="n">0,6821</td>
+<td class="n">0,1513</td></tr>
+<tr><td>Sin <code>active_products</code> ni columnas booleanas</td><td class="n">71</td>
+<td class="n">0,6821</td><td class="n">0,1514</td></tr>
+<tr><td>Solo variables transaccionales derivadas</td><td class="n">12</td><td class="n">0,5016</td>
+<td class="n">0,0007</td></tr>
+<tr><td>Solo demografía y satisfacción</td><td class="n">66</td><td class="n">0,6816</td>
+<td class="n">0,1507</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>El resultado es concluyente en ambas formulaciones, pero es la de regresión la que lo expresa
+con mayor claridad. Incluir <code>active_products</code> eleva el AUC de 0,6821 a 0,9736, una
+diferencia de 0,2915; y eleva el <var>R</var><sup>2</sup> de 0,1513 a 0,9211, una diferencia de
+0,7698. La segunda cifra admite una lectura directa que la primera no permite:
+<span class="destacado">con esa columna el modelo reproduce el 92 % de la varianza de la etiqueta,
+y sin ella apenas el 15 %</span>. Eso no corresponde a capacidad predictiva, sino a la
+recuperación de la regla que generó la etiqueta, y confirma cuantitativamente el diagnóstico de la
+Sección 2.2.8. La formulación de clasificación comprime esta diferencia porque el AUC opera sobre
+la etiqueta ya binarizada y descarta la magnitud del puntaje; de ahí el valor diagnóstico de
+abordar también la tarea en su forma continua.</p>
+
+<p>La coincidencia exacta entre los escenarios segundo y tercero corrobora además que las columnas
+booleanas de tenencia no reintroducen la fuga por una vía indirecta, lo que justifica
+conservarlas. Igualmente revelador es el cuarto escenario: las variables derivadas del detalle
+transaccional, usadas en solitario, alcanzan un AUC de 0,5016 y un <var>R</var><sup>2</sup> de
+0,0007, ambos indistinguibles del azar. El comportamiento transaccional real de los clientes no
+guarda relación con la etiqueta de fuga de este conjunto, lo que refuerza la conclusión de que
+dicha etiqueta fue construida sintéticamente.</p>
+
+<h3>3.2 Comparación de los esquemas de regularización en clasificación</h3>
+
+<p>La Tabla 18 recoge el desempeño de ambas penalizaciones para los valores de <var>C</var>
+explorados, junto con el número de variables que cada configuración conserva.</p>
+
+<div class="tabla-envoltorio">
+<table>
+<caption><span class="et">Tabla 18:</span> AUC en validación cruzada según penalización e
+intensidad de regularización, ordenado de mayor a menor.</caption>
+<thead><tr><th>Penalización</th><th class="n"><var>C</var></th><th class="n">AUC medio</th>
+<th class="n">Desv. est.</th><th class="n">Variables no nulas</th></tr></thead>
+<tbody>
+<tr><td>Lasso (<var>L</var><sub>1</sub>)</td><td class="n">0,10</td><td class="n">0,6824</td><td class="n">0,0039</td><td class="n">57</td></tr>
+<tr><td>Ridge (<var>L</var><sub>2</sub>)</td><td class="n">0,01</td><td class="n">0,6823</td><td class="n">0,0038</td><td class="n">78</td></tr>
+<tr><td>Lasso (<var>L</var><sub>1</sub>)</td><td class="n">1,00</td><td class="n">0,6822</td><td class="n">0,0041</td><td class="n">76</td></tr>
+<tr><td>Ridge (<var>L</var><sub>2</sub>)</td><td class="n">0,10</td><td class="n">0,6822</td><td class="n">0,0040</td><td class="n">78</td></tr>
+<tr><td>Ridge (<var>L</var><sub>2</sub>)</td><td class="n">1,00</td><td class="n">0,6821</td><td class="n">0,0042</td><td class="n">78</td></tr>
+<tr><td>Lasso (<var>L</var><sub>1</sub>)</td><td class="n">100,00</td><td class="n">0,6821</td><td class="n">0,0042</td><td class="n">78</td></tr>
+<tr><td>Lasso (<var>L</var><sub>1</sub>)</td><td class="n">10,00</td><td class="n">0,6821</td><td class="n">0,0042</td><td class="n">77</td></tr>
+<tr><td>Ridge (<var>L</var><sub>2</sub>)</td><td class="n">10,00</td><td class="n">0,6821</td><td class="n">0,0042</td><td class="n">78</td></tr>
+<tr><td>Ridge (<var>L</var><sub>2</sub>)</td><td class="n">100,00</td><td class="n">0,6821</td><td class="n">0,0042</td><td class="n">78</td></tr>
+<tr><td>Lasso (<var>L</var><sub>1</sub>)</td><td class="n">0,01</td><td class="n">0,6820</td><td class="n">0,0038</td><td class="n">19</td></tr>
+<tr><td>Ridge (<var>L</var><sub>2</sub>)</td><td class="n">0,001</td><td class="n">0,6816</td><td class="n">0,0037</td><td class="n">78</td></tr>
+<tr><td>Lasso (<var>L</var><sub>1</sub>)</td><td class="n">0,001</td><td class="n">0,6799</td><td class="n">0,0036</td><td class="n">3</td></tr>
+</tbody>
+</table>
+</div>
+
+<figure><img src="figuras/fig19.png" alt="">
+<figcaption><span class="et">Fig. 19:</span> Desempeño y parsimonia frente a la intensidad de
+regularización. A la izquierda, AUC en validación cruzada con su desviación entre particiones; a
+la derecha, número de variables con coeficiente no nulo. Ridge no anula ningún coeficiente en todo
+el rango, mientras que Lasso reduce el modelo de 78 variables a 3.</figcaption></figure>
+
+<p>Las diferencias entre configuraciones son mínimas: el rango completo abarca 0,0025 puntos,
+inferior a la desviación entre particiones (0,0039). Esto indica que, tras la limpieza, el
+conjunto no presenta colinealidad severa que la regularización deba corregir. La búsqueda en
+rejilla seleccionó Lasso con <var>C</var> = 0,1, que conserva 57 de las 78 variables.</p>
+
+<p>El valor de la penalización <var>L</var><sub>1</sub> no reside, por tanto, en el AUC sino en la
+parsimonia, y la Tabla 18 permite cuantificar ese intercambio con precisión: Lasso con
+<var>C</var> = 0,01 alcanza 0,6820, apenas cuatro diezmilésimas por debajo del óptimo y muy dentro
+del ruido entre particiones, empleando <span class="destacado">solo 19 variables</span> en lugar
+de 57. Si el criterio de selección incorporara la simplicidad del modelo además del desempeño, esa
+configuración sería preferible. Incluso el modelo de tres variables (<var>C</var> = 0,001)
+conserva un AUC de 0,6799, lo que confirma que la señal está extremadamente concentrada.</p>
+
+<p>Se evaluó asimismo la contribución de las variables transaccionales dentro del modelo
+seleccionado: su inclusión produce un AUC de 0,6824 frente a 0,6818 sin ellas, una diferencia de
+0,0006 muy inferior a la desviación entre particiones. En regresión la diferencia es igualmente
+despreciable: <var>R</var><sup>2</sup> de 0,1513 frente a 0,1507. La evidencia confirma que no
+aportan capacidad predictiva.</p>
+
+<h3>3.3 Regresión sobre el objetivo continuo</h3>
+
+<p>La búsqueda en rejilla seleccionó <var>α</var> = 1.000 para Ridge y <var>α</var> = 0,0001 para
+Lasso, ambos óptimos interiores a la rejilla explorada. La Figura 20 muestra el camino de los
+coeficientes en función de <var>α</var> y hace visible la diferencia geométrica entre ambas
+penalizaciones: Ridge encoge los coeficientes de forma continua sin anular ninguno en todo el
+rango, mientras que Lasso los lleva a cero uno a uno, produciendo selección automática de
+variables.</p>
+
+<figure><img src="figuras/fig20.png" alt="">
+<figcaption><span class="et">Fig. 20:</span> Camino de los coeficientes de la regresión Ridge
+(izquierda) y Lasso (centro) en función de <var>α</var>, y número de variables con coeficiente no
+nulo en ambos casos (derecha).</figcaption></figure>
+
+<p>La Tabla 19 recoge el desempeño de los tres modelos de regresión sobre el conjunto de
+prueba.</p>
+
+<div class="tabla-envoltorio">
+<table>
+<caption><span class="et">Tabla 19:</span> Desempeño de los modelos de regresión sobre el conjunto
+de prueba (<var>n</var> = 9.745).</caption>
+<thead><tr><th>Modelo</th><th class="n"><var>R</var><sup>2</sup></th><th class="n">RMSE</th>
+<th class="n">MAE</th><th class="n">Variables no nulas</th></tr></thead>
+<tbody>
+<tr><td>Mínimos cuadrados ordinarios</td><td class="n">0,1499</td><td class="n">0,0617</td><td class="n">0,0507</td><td class="n">78</td></tr>
+<tr><td>Ridge (<var>α</var> = 1.000)</td><td class="n">0,1509</td><td class="n">0,0617</td><td class="n">0,0507</td><td class="n">78</td></tr>
+<tr><td>Lasso (<var>α</var> = 0,0001)</td><td class="n">0,1511</td><td class="n">0,0617</td><td class="n">0,0507</td><td class="n">40</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>El RMSE debe interpretarse contra la desviación típica de la variable objetivo en el conjunto
+de prueba, 0,0669, que es el error que obtendría un modelo que predijera siempre la media. El
+modelo lo reduce únicamente en un 7,9 %, magnitud coherente con un <var>R</var><sup>2</sup> de
+0,151. En términos absolutos el error es pequeño —el MAE de 0,0507 sobre un objetivo acotado en
+[0,11; 0,50]—, pero eso se debe al estrecho rango de la variable y no a un ajuste satisfactorio.
+Las diferencias entre mínimos cuadrados, Ridge y Lasso son mínimas, lo que reproduce el mismo
+diagnóstico obtenido en clasificación: tras la depuración no queda colinealidad severa que la
+regularización deba corregir, y su aporte está en la parsimonia —40 variables frente a 78— y no en
+el ajuste.</p>
+
+<figure><img src="figuras/fig21.png" alt="">
+<figcaption><span class="et">Fig. 21:</span> Diagnóstico de la regresión Lasso sobre el conjunto
+de prueba: predicción frente a valor real (izquierda), residuos frente a predicción (centro) y
+distribución de los residuos (derecha). El rango de las predicciones es muy inferior al de los
+valores reales, comportamiento esperable en un modelo con
+<var>R</var><sup>2</sup> = 0,151.</figcaption></figure>
+
+<p>El diagnóstico de residuos (Figura 21) no revela patrones sistemáticos: los residuos se
+distribuyen de forma aproximadamente simétrica en torno a cero y sin estructura frente a la
+predicción, lo que indica que el modelo lineal no deja sin capturar una relación evidente. El
+rango comprimido de las predicciones frente al de los valores reales es la manifestación gráfica
+del bajo <var>R</var><sup>2</sup>: el modelo distingue tendencias generales pero no reproduce la
+variabilidad individual.</p>
+
+<h3>3.4 Desempeño del modelo de clasificación seleccionado</h3>
+
+<p>La Tabla 20 resume el desempeño sobre el conjunto de prueba, que no intervino en ninguna etapa
+del ajuste: ni en la estimación del umbral, ni en el escalado, ni en la codificación, ni en la
+selección de hiperparámetros.</p>
+
+<div class="tabla-envoltorio">
+<table>
+<caption><span class="et">Tabla 20:</span> Desempeño del modelo seleccionado
+(Lasso, <var>C</var> = 0,1) sobre el conjunto de prueba (<var>n</var> = 9.745).</caption>
+<thead><tr><th>Métrica</th><th class="n">Valor</th></tr></thead>
+<tbody>
+<tr><td>AUC en validación cruzada</td><td class="n">0,6824 ± 0,0039</td></tr>
+<tr><td>AUC en prueba</td><td class="n">0,6832</td></tr>
+<tr><td>Exhaustividad (<i>recall</i>)</td><td class="n">0,6515</td></tr>
+<tr><td>Precisión</td><td class="n">0,6311</td></tr>
+<tr><td>F1</td><td class="n">0,6412</td></tr>
+<tr><td>Exactitud</td><td class="n">0,6360</td></tr>
+<tr><td>Variables seleccionadas</td><td class="n">57 de 78</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>El AUC en prueba (0,6832) coincide con el obtenido en validación cruzada (0,6824) dentro del
+margen de error, lo que indica un modelo estable y sin sobreajuste. Al estar las clases
+balanceadas, precisión y exhaustividad resultan equilibradas (0,631 y 0,652). La Figura 22
+presenta la curva ROC, la curva precisión–exhaustividad y la matriz de confusión.</p>
+
+<figure><img src="figuras/fig22.png" alt="">
+<figcaption><span class="et">Fig. 22:</span> Evaluación del modelo seleccionado sobre el conjunto
+de prueba: curva ROC, curva precisión–exhaustividad y matriz de confusión.</figcaption></figure>
+
+<h3>3.5 Referencia no paramétrica</h3>
+
+<p>La Tabla 21 recoge el desempeño del clasificador de <var>k</var> vecinos más cercanos.</p>
+
+<div class="tabla-envoltorio">
+<table>
+<caption><span class="et">Tabla 21:</span> AUC en validación cruzada del clasificador de
+<var>k</var> vecinos más cercanos.</caption>
+<thead><tr><th class="n"><var>k</var></th><th class="n">AUC medio</th>
+<th class="n">Desv. est.</th></tr></thead>
+<tbody>
+<tr><td class="n">10</td><td class="n">0,5956</td><td class="n">0,0025</td></tr>
+<tr><td class="n">25</td><td class="n">0,6234</td><td class="n">0,0066</td></tr>
+<tr><td class="n">50</td><td class="n">0,6400</td><td class="n">0,0072</td></tr>
+<tr><td class="n">100</td><td class="n">0,6549</td><td class="n">0,0060</td></tr>
+<tr><td class="n">200</td><td class="n">0,6645</td><td class="n">0,0035</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>El AUC crece monótonamente con <var>k</var> y el mejor valor explorado, <var>k</var> = 200,
+alcanza 0,6645, <span class="destacado">por debajo</span> de la regresión logística regularizada
+(0,6824). Que el desempeño mejore al ampliar el vecindario indica que la estructura local es ruido
+y no señal, y que el método converge hacia un comportamiento cada vez más suave. Que un
+clasificador sin forma funcional impuesta no supere al modelo lineal sugiere que queda poca
+estructura no lineal o de interacción por capturar con estas variables. Este resultado sustituye
+por una medición lo que de otro modo sería una conjetura sobre el margen de mejora
+disponible.</p>
+
+<h3>3.6 Variables que sostienen el modelo</h3>
+
+<p>Los coeficientes, expresados en escala estandarizada y por tanto comparables entre sí, muestran
+una concentración notable de la señal (Figura 23).</p>
+
+<figure><img src="figuras/fig23.png" alt="">
+<figcaption><span class="et">Fig. 23:</span> Coeficientes de mayor magnitud en escala
+estandarizada: regresión logística sobre la etiqueta binarizada (izquierda) y regresión Lasso
+sobre el objetivo continuo (derecha). Ambas formulaciones señalan las mismas tres variables, en el
+mismo orden y con los mismos signos.</figcaption></figure>
+
+<div class="tabla-envoltorio">
+<table>
+<caption><span class="et">Tabla 22:</span> Coeficientes de las tres variables dominantes en las
+dos formulaciones, en escala estandarizada.</caption>
+<thead><tr><th>Variable</th><th class="n">Logística (clasificación)</th>
+<th class="n">Lasso (regresión)</th></tr></thead>
+<tbody>
+<tr><td><code>app_logins_frequency</code></td><td class="n">−0,4701</td><td class="n">−0,0174</td></tr>
+<tr><td><code>age</code></td><td class="n">+0,4123</td><td class="n">+0,0157</td></tr>
+<tr><td><code>satisfaction_score</code></td><td class="n">−0,3861</td><td class="n">−0,0128</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>Tres variables concentran prácticamente toda la capacidad predictiva: la frecuencia de acceso a
+la aplicación (−0,4701), la edad (+0,4123) y la satisfacción declarada (−0,3861). Las restantes
+presentan coeficientes de magnitud considerablemente menor. Los signos son coherentes con la
+teoría de retención: mayor uso del canal digital y mayor satisfacción se asocian con menor riesgo
+de fuga, mientras que la edad se asocia positivamente con él.</p>
+
+<p>La concordancia entre las dos formulaciones constituye un argumento de robustez. La regresión
+Lasso sobre el objetivo continuo —un modelo distinto,
+ajustado sobre una variable distinta y con una función de pérdida distinta— señala exactamente las
+mismas tres variables, en el mismo orden y con los mismos signos. La lectura no es, por tanto, un
+artefacto de haber binarizado la etiqueta. Las magnitudes no son directamente comparables entre
+columnas de la Tabla 22, porque la logística opera sobre el <i>logit</i> y la regresión sobre la
+escala original del puntaje; lo comparable es el orden relativo y el signo.</p>
+
+<h2>4 Conclusiones</h2>
+
+<p>Este trabajo abordó la caracterización, la auditoría de calidad y el modelado base para
+predecir la fuga de clientes sobre un conjunto público de una empresa fintech colombiana. El
+análisis exploratorio describió las 54 variables de los 48.723 clientes y los 3,16 millones de
+transacciones asociadas, y verificó que ambas tablas son mutuamente consistentes: sin clientes
+huérfanos, sin montos inválidos, sin fechas nulas y con cobertura transaccional completa.</p>
+
+<p>La auditoría reveló tres condiciones que habrían comprometido cualquier resultado obtenido
+sobre los datos crudos. La principal es la relación entre <code>churn_probability</code> y
+<code>active_products</code>: una escalera de paso constante que explica el 76,7 % de la varianza
+de la etiqueta y que, junto con el truncamiento artificial del rango, indica que la variable
+objetivo fue construida a partir de un predictor disponible. La segunda es la presencia de
+columnas transaccionales duplicadas y desalineadas, cuya naturaleza solo se hizo evidente al
+comparar las distribuciones como conjuntos y al reconciliarlas contra el detalle real. La tercera
+es el carácter estructural de los valores faltantes de <code>credit_utilization_ratio</code>.
+Estos hallazgos se tradujeron en la eliminación documentada de 17 variables y en un conjunto
+depurado de 49 columnas.</p>
+
+<p>El experimento de ablación cuantificó el impacto de la fuga en las dos formulaciones, y es la
+de regresión la que lo hace de forma más elocuente: incluir <code>active_products</code> eleva el
+<var>R</var><sup>2</sup> de 0,1513 a 0,9211 y el AUC de 0,6821 a 0,9736. Que una sola columna
+reproduzca el 92 % de la varianza de la etiqueta no admite lectura como capacidad predictiva. Se
+optó por excluirla, que es el único escenario metodológicamente defendible.</p>
+
+<p>Sobre el conjunto depurado, la regresión logística con penalización <var>L</var><sub>1</sub>
+alcanza un AUC de 0,6832 en el conjunto de prueba, con exhaustividad de 0,6515 y precisión de
+0,6311, seleccionando 57 de las 78 variables disponibles; una configuración más penalizada
+(<var>C</var> = 0,01) alcanza un AUC prácticamente idéntico con solo 19 variables, de modo que la
+parsimonia se obtiene a un coste despreciable. Sobre el objetivo continuo, la regresión Lasso
+alcanza <var>R</var><sup>2</sup> = 0,1511 con RMSE de 0,0617, frente a una desviación típica del
+objetivo de 0,0669: una reducción del error de apenas el 7,9 %. El desempeño se concentra en tres
+predictores —frecuencia de uso de la aplicación, edad y satisfacción declarada—, identificados de
+forma concordante por las dos formulaciones, mientras que el comportamiento transaccional no
+aporta capacidad predictiva alguna, como confirman tanto las correlaciones (todas por debajo de
+0,03 en valor absoluto) como el AUC de 0,5016 y el <var>R</var><sup>2</sup> de 0,0007 que alcanzan
+esas variables en solitario.</p>
+
+<p>Sobre el margen de mejora disponible, este trabajo aporta una medición en lugar de una
+conjetura. Un clasificador de <var>k</var> vecinos más cercanos, que no impone forma funcional
+alguna y por tanto podría capturar relaciones no lineales e interacciones, alcanza en el mejor
+caso un AUC de 0,6645, inferior al del modelo lineal. La implicación es que el margen para el
+modelo propio del proyecto final es estrecho: la suma de las contribuciones individuales de los
+predictores restantes acota ese margen, y un incremento sustancial del AUC solo sería alcanzable
+reintroduciendo la variable que produce la fuga, lo que invalidaría el resultado. Este resultado
+negativo es, en sí mismo, un hallazgo útil para orientar la siguiente fase.</p>
+
+<p>El estudio presenta limitaciones que conviene declarar. El análisis se apoya en un único
+conjunto cuyos indicios de generación sintética —rangos truncados, ausencia de estacionalidad
+semanal, paso constante en la escalera de fuga e independencia respecto del comportamiento
+transaccional— limitan la validez externa de las conclusiones sustantivas sobre comportamiento
+financiero, aunque no afectan la validez del procedimiento de auditoría ni del modelado. Asimismo,
+no fue posible confirmar con la fuente cómo se construyó la etiqueta, por lo que la fuga de
+información se sostiene como la hipótesis más plausible y no como un hecho verificado.</p>
+
+<h2>Declaraciones</h2>
+
+<ul class="decl">
+<li><span class="destacado">Disponibilidad de datos:</span> el conjunto es público y está
+disponible en Mendeley Data, https://data.mendeley.com/datasets/mhb4zn3258/1
+(DOI: 10.17632/mhb4zn3258.1), bajo licencia Creative Commons Attribution 4.0 (Muñoz Guerrero
+et al., 2025).</li>
+<li><span class="destacado">Disponibilidad de código y reproducibilidad:</span> el código completo
+está disponible en https://github.com/RubenEsg/Machine_learning. El cuaderno se publica
+<span class="destacado">ejecutado de principio a fin</span>, con todas sus salidas y su numeración
+de ejecución; la ruta de los datos se resuelve de forma relativa, de modo que no depende de la
+máquina; y una sección final deja constancia del entorno (Python 3.13.3,
+<span class="mono">numpy</span> 2.2.6, <span class="mono">pandas</span> 2.3.3,
+<span class="mono">scikit-learn</span> 1.7.2, semilla 42) y del tiempo total de cómputo. Cada
+cifra de este manuscrito corresponde a una salida concreta de esa ejecución.</li>
+<li><span class="destacado">Contribución de los autores:</span> los tres autores participaron
+conjuntamente en el diseño del análisis, la implementación del cuaderno, la interpretación de los
+resultados y la redacción del manuscrito. Todos revisaron y aprobaron la versión final.</li>
+<li><span class="destacado">Conflicto de intereses:</span> los autores declaran no tener
+conflictos de interés.</li>
+</ul>
+
+<h2>Referencias bibliográficas</h2>
+
+<div class="refs">
+<p>Breiman, L. (2001). Random forests. <i>Machine Learning</i>, 45(1):5–32.</p>
+<p>Chen, T. y Guestrin, C. (2016). XGBoost: A scalable tree boosting system. En <i>Proceedings of
+the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining</i>,
+páginas 785–794.</p>
+<p>Gupta, S., Hanssens, D., Hardie, B., Kahn, W., Kumar, V., Lin, N., Ravishanker, N. y Sriram, S.
+(2006). Modeling customer lifetime value. <i>Journal of Service Research</i>, 9(2):139–155.</p>
+<p>Hoerl, A. E. y Kennard, R. W. (1970). Ridge regression: Biased estimation for nonorthogonal
+problems. <i>Technometrics</i>, 12(1):55–67.</p>
+<p>Kaufman, S., Rosset, S., Perlich, C. y Stitelman, O. (2012). Leakage in data mining:
+Formulation, detection, and avoidance. <i>ACM Transactions on Knowledge Discovery from Data</i>,
+6(4):1–21.</p>
+<p>Little, R. J. A. y Rubin, D. B. (2019). <i>Statistical Analysis with Missing Data</i>. Wiley,
+Hoboken, NJ, 3.ª edición.</p>
+<p>Muñoz Guerrero, L. E., Ceballos, Y. F. y Trejos Rojas, L. D. (2025). COFINFAD: Colombian
+Fintech Financial Analytics Dataset. Mendeley Data, V1. DOI: 10.17632/mhb4zn3258.1.</p>
+<p>Pedregosa, F. et al. (2011). Scikit-learn: Machine learning in Python. <i>Journal of Machine
+Learning Research</i>, 12:2825–2830.</p>
+<p>Tibshirani, R. (1996). Regression shrinkage and selection via the Lasso. <i>Journal of the
+Royal Statistical Society: Series B</i>, 58(1):267–288.</p>
+<p>Tukey, J. W. (1977). <i>Exploratory Data Analysis</i>. Addison-Wesley, Reading, MA.</p>
+<p>Verbeke, W., Dejaeger, K., Martens, D., Hur, J. y Baesens, B. (2012). New insights into churn
+prediction in the telecommunication sector: A profit driven data mining approach. <i>European
+Journal of Operational Research</i>, 218(1):211–229.</p>
+<p>Wirth, R. y Hipp, J. (2000). CRISP-DM: Towards a standard process model for data mining. En
+<i>Proceedings of the 4th International Conference on the Practical Applications of Knowledge
+Discovery and Data Mining</i>, páginas 29–39.</p>
+</div>
+
+</html>
