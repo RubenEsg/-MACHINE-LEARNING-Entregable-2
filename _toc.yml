@@ -1,0 +1,3 @@
+# Una sola pagina: el cuaderno (que ya incluye su portada) es la raiz del libro.
+format: jb-book
+root: entrega2_modelo

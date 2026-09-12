@@ -3,7 +3,9 @@
 datos/
 *.csv
 
-# Salidas y temporales
+# Libro compilado localmente; el sitio publicado vive en docs/
+_build/
+
+# Temporales
 .ipynb_checkpoints/
 __pycache__/
-_build/

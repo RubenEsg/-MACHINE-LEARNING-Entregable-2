@@ -1,0 +1,41 @@
+# Configuración del Jupyter Book
+title: "Modelos base — Fuga de clientes en una fintech colombiana"
+author: "Martínez Pulido · Basto Martínez · Esguerra Fernández"
+logo: ""
+
+# IMPORTANTE: usa las salidas ya guardadas en el .ipynb (NO re-ejecuta el notebook).
+# Así se ve "ya ejecutado" sin necesitar los CSV en el repositorio.
+execute:
+  execute_notebooks: "off"
+
+# Solo construye los archivos listados en _toc.yml
+only_build_toc_files: true
+
+exclude_patterns:
+  - _build
+  - docs
+  - manuscrito_fuente
+  - README.md
+
+repository:
+  url: https://github.com/RubenEsg/-MACHINE-LEARNING-Entregable-2
+  branch: main
+
+html:
+  use_issues_button: false
+  use_repository_button: true
+  use_edit_page_button: false
+
+sphinx:
+  config:
+    html_css_files:
+      - custom.css
+    html_theme_options:
+      show_navbar_depth: 0
+      secondary_sidebar_items: []
+      navigation_with_keys: false
+
+parse:
+  myst_enable_extensions:
+    - dollarmath
+    - amsmath

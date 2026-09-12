@@ -8,6 +8,11 @@ Auditoría de calidad de datos y modelos lineales de referencia para la predicci
 clientes en una fintech colombiana. Continúa el
 [análisis exploratorio](https://rubenesg.github.io/Machine_learning/) de la Entrega 1.
 
+## Sitio
+
+El cuaderno se publica como Jupyter Book, con todo el código y sus salidas:
+**https://rubenesg.github.io/-MACHINE-LEARNING-Entregable-2/**
+
 ## Contenido
 
 | Archivo | Descripción |
@@ -15,6 +20,19 @@ clientes en una fintech colombiana. Continúa el
 | `entrega2_modelo.ipynb` | Cuaderno completo, **ejecutado de principio a fin**: procesamiento, auditoría de la etiqueta, clasificación logística con Ridge/Lasso, regresión Ridge/Lasso sobre el objetivo continuo y referencia KNN |
 | `Entrega2.pdf` | Artículo con la metodología y los resultados |
 | `manuscrito_fuente/` | Fuente editable del artículo (HTML y figuras) |
+| `_config.yml`, `_toc.yml`, `_static/` | Configuración del Jupyter Book |
+| `docs/` | Sitio compilado que sirve GitHub Pages |
+
+## Compilar el libro
+
+El libro se construye con `execute_notebooks: "off"`, es decir, **usa las salidas ya guardadas en
+el `.ipynb`**: se compila sin necesidad de tener los CSV.
+
+```bash
+pip install -r requirements.txt
+jupyter-book build .
+rm -rf docs && cp -r _build/html docs && touch docs/.nojekyll
+```
 
 ## Datos
 
